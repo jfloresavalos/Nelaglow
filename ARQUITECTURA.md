@@ -144,7 +144,31 @@ Rastrea todos los movimientos de inventario.
 - `src/app/api/excel-template/route.ts` → GET genera y sirve plantilla .xlsx
 
 ## 10. Despliegue
-- **Vercel**: Optimizado para Next.js.
-- **Environment**:
-    - `DATABASE_URL`: Postgres Connection Pool.
-    - `AUTH_SECRET`: Encriptación de cookies.
+
+### Infraestructura
+- **VPS**: Ubuntu — `212.85.12.168`
+- **Proceso**: PM2 (`ecosystem.config.js`) — puerto **3001**
+- **BD**: PostgreSQL local — base `nelaglow_db`
+- **Repo**: `https://github.com/jfloresavalos/Nelaglow.git`
+
+### Archivos de deploy
+- `ecosystem.config.js` — configuración PM2
+- `deploy.sh` — script automatizado (primera vez: `./deploy.sh --setup`, actualizaciones: `./deploy.sh`)
+- `.env.production.example` — plantilla de variables de entorno
+
+### Variables de entorno requeridas (`.env`)
+```
+DATABASE_URL="postgresql://postgres:PASSWORD@localhost:5432/nelaglow_db?schema=public"
+AUTH_SECRET="32-chars-random"   # openssl rand -base64 32
+AUTH_URL="http://212.85.12.168:3001"
+UPLOAD_DIR="uploads"
+NODE_ENV="production"
+```
+
+### Flujo de actualización
+```bash
+ssh root@212.85.12.168
+cd /var/www/nelaglow
+git pull
+./deploy.sh
+```

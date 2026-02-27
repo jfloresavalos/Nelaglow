@@ -142,6 +142,14 @@ Para migrar productos ya creados (ej. "Termo Rojo", "Termo Azul" como productos 
 - **Turbopack** activo: `next dev --turbopack` en `package.json`. Reduce compilación de ~38s a ~3-6s.
 - **optimizePackageImports** en `next.config.ts`: `lucide-react`, `recharts`, `date-fns`. Reduce el número de módulos compilados.
 
+## Últimos Cambios (Sesión 2026-02-25 — Deploy VPS)
+1. **Archivos de deploy creados**: `ecosystem.config.js` (PM2, puerto 3001), `deploy.sh` (script automatizado), `.env.production.example` (plantilla).
+2. **`.gitignore` actualizado**: Excluye `.claude/`, `.agent/`, `*.xlsx`, `nul`, `~$*`, `logs/`, `backups/`. Permite `.env.production.example`.
+3. **`.gitattributes`**: `* text=auto eol=lf` para normalizar line endings (Windows → Linux).
+4. **`next.config.ts`**: Agregado IP del VPS `212.85.12.168` a `remotePatterns`.
+5. **Repo GitHub**: `https://github.com/jfloresavalos/Nelaglow.git` — rama `main` con 2 commits.
+6. **Deploy en VPS**: Clonar con `git clone https://github.com/jfloresavalos/Nelaglow.git /var/www/nelaglow`, configurar `.env`, ejecutar `./deploy.sh --setup` y `./deploy.sh`. App corre en `http://212.85.12.168:3001`.
+
 ## Últimos Cambios (Sesión 2026-02-24 — Performance + Agregar Productos a Pedido)
 1. **`useDebounce` hook**: Nuevo `src/lib/hooks.ts` con hook compartido. Reemplaza los `useRef<setTimeout>` manuales en `ProductsList`, `OrdersList`, `ClientsList`, `KardexTable`.
 2. **Eliminado `useSearchParams()`**: `products-list.tsx`, `orders-list.tsx`, `clients-list.tsx` — params llegan como props primitivas desde el Server Component. Soluciona CSR bailout de Next.js 15.
