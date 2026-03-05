@@ -40,8 +40,21 @@ export function ProductsTable({ products, onDelete }: ProductsTableProps) {
         </TableHeader>
         <TableBody>
           {products.map((product) => {
-            const primaryImage = product.images.find((img) => img.isPrimary) || product.images[0]
             const hasVariants = product.variants && product.variants.length > 0
+
+            // Si tiene variantes, usar imagen de la primera variante con imagen
+            let primaryImage: { imageUrl: string; thumbnailUrl?: string | null } | undefined
+            if (hasVariants) {
+              for (const variant of product.variants!) {
+                if (variant.images && variant.images.length > 0) {
+                  primaryImage = variant.images[0]
+                  break
+                }
+              }
+              if (!primaryImage) primaryImage = product.images.find((img) => img.isPrimary) || product.images[0]
+            } else {
+              primaryImage = product.images.find((img) => img.isPrimary) || product.images[0]
+            }
             const effectiveStock = hasVariants
               ? product.variants!.reduce((s, v) => s + v.stock, 0)
               : product.stock

@@ -11,6 +11,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { Edit, ArrowLeft, Package } from 'lucide-react'
 import type { ProductForWizard } from '@/types'
 import { DeleteProductButton } from '@/components/products/delete-product-button'
+import { ProductColorSelector } from '@/components/products/product-color-selector'
 
 export default async function ProductDetailPage({
   params,
@@ -75,43 +76,155 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Images */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Imagenes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {product.images.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {product.images.map((image, index) => (
-                  <div
-                    key={image.id}
-                    className="relative aspect-square overflow-hidden rounded-lg border bg-muted/30"
-                  >
-                    <Image
-                      src={image.imageUrl}
-                      alt={`${product.name} - ${index + 1}`}
-                      fill
-                      className="object-contain p-2"
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                    />
-                    {image.isPrimary && (
-                      <Badge className="absolute bottom-2 left-2">Principal</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex h-48 items-center justify-center rounded-lg border bg-gray-50">
-                <Package className="h-12 w-12 text-gray-300" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Selector interactivo de color (solo padre con variantes) */}
+      {isParent && hasVariants ? (
+        <ProductColorSelector
+          parentImages={product.images.map((img) => ({
+            imageUrl: img.imageUrl,
+            thumbnailUrl: img.thumbnailUrl ?? null,
+            isPrimary: img.isPrimary,
+          }))}
+          variants={(product as any).variants.map((v: any) => ({
+            id: v.id,
+            name: v.name,
+            color: v.color ?? null,
+            stock: v.stock,
+            lowStockThreshold: v.lowStockThreshold,
+            isActive: v.isActive,
+            images: (v.images ?? []).map((img: any) => ({
+              imageUrl: img.imageUrl,
+              thumbnailUrl: img.thumbnailUrl ?? null,
+            })),
+          }))}
+          productName={product.name}
+        />
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Images */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Imagenes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {product.images.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {product.images.map((image, index) => (
+                    <div
+                      key={image.id}
+                      className="relative aspect-square overflow-hidden rounded-lg border bg-muted/30"
+                    >
+                      <Image
+                        src={image.imageUrl}
+                        alt={`${product.name} - ${index + 1}`}
+                        fill
+                        className="object-contain p-2"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                      />
+                      {image.isPrimary && (
+                        <Badge className="absolute bottom-2 left-2">Principal</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex h-48 items-center justify-center rounded-lg border bg-gray-50">
+                  <Package className="h-12 w-12 text-gray-300" />
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Details */}
-        <div className="space-y-6">
+          {/* Details */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informacion General</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Estado</span>
+                  {product.isActive ? (
+                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                      Activo
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">Inactivo</Badge>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Precio de venta</span>
+                  <span className="text-lg font-semibold">
+                    {formatCurrency(Number(product.price))}
+                  </span>
+                </div>
+                {product.costPrice && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Precio de costo</span>
+                    <span>{formatCurrency(Number(product.costPrice))}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Creado</span>
+                  <span>{formatDate(product.createdAt)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Inventario</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Stock actual</span>
+                  <span
+                    className={`text-lg font-semibold ${
+                      isOutOfStock
+                        ? 'text-red-600'
+                        : isLowStock
+                        ? 'text-yellow-600'
+                        : 'text-green-600'
+                    }`}
+                  >
+                    {effectiveStock} unidades
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Alerta de stock bajo</span>
+                  <span>{product.lowStockThreshold} unidades</span>
+                </div>
+                {isOutOfStock && (
+                  <Badge variant="destructive" className="w-full justify-center">
+                    Producto agotado
+                  </Badge>
+                )}
+                {isLowStock && !isOutOfStock && (
+                  <Badge className="w-full justify-center bg-yellow-500">
+                    Stock bajo - Reabastecer pronto
+                  </Badge>
+                )}
+              </CardContent>
+            </Card>
+
+            {product.description && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Descripcion</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="whitespace-pre-wrap text-muted-foreground">
+                    {product.description}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Información general — siempre visible */}
+      {isParent && hasVariants && (
+        <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Informacion General</CardTitle>
@@ -128,7 +241,7 @@ export default async function ProductDetailPage({
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Precio de venta</span>
+                <span className="text-muted-foreground">Precio base</span>
                 <span className="text-lg font-semibold">
                   {formatCurrency(Number(product.price))}
                 </span>
@@ -146,46 +259,6 @@ export default async function ProductDetailPage({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Inventario</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">
-                  {hasVariants ? `Stock total (${variants!.length} colores)` : 'Stock actual'}
-                </span>
-                <span
-                  className={`text-lg font-semibold ${
-                    isOutOfStock
-                      ? 'text-red-600'
-                      : isLowStock
-                      ? 'text-yellow-600'
-                      : 'text-green-600'
-                  }`}
-                >
-                  {effectiveStock} unidades
-                </span>
-              </div>
-              {!hasVariants && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Alerta de stock bajo</span>
-                  <span>{product.lowStockThreshold} unidades</span>
-                </div>
-              )}
-              {isOutOfStock && (
-                <Badge variant="destructive" className="w-full justify-center">
-                  {hasVariants ? 'Todos los colores agotados' : 'Producto agotado'}
-                </Badge>
-              )}
-              {isLowStock && !isOutOfStock && (
-                <Badge className="w-full justify-center bg-yellow-500">
-                  Stock bajo - Reabastecer pronto
-                </Badge>
-              )}
-            </CardContent>
-          </Card>
-
           {product.description && (
             <Card>
               <CardHeader>
@@ -199,7 +272,7 @@ export default async function ProductDetailPage({
             </Card>
           )}
         </div>
-      </div>
+      )}
 
       {/* Variants panel — only shown for parent products */}
       {isParent && (

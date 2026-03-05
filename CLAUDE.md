@@ -64,6 +64,38 @@ npm run db:push      # Sincronizar schema
 npm run db:studio    # Explorador de BD
 ```
 
+## Flujo de Trabajo: Local → VPS
+
+### Regla principal
+**TODO cambio se prueba primero en local. Solo se commitea y despliega al VPS cuando el usuario da su OK explícito.**
+
+### Flujo obligatorio para cualquier cambio o feature:
+1. **Desarrollar en local** — implementar el cambio en `localhost:3000`
+2. **Probar en local** — el usuario verifica que funciona correctamente
+3. **Esperar OK del usuario** — NO commitear ni deployar sin confirmación explícita
+4. **Commit** — mensaje descriptivo con `Co-Authored-By: Claude Sonnet 4.6`
+5. **Deploy al VPS** — usando el skill `/deploy` (git push + deploy.sh en VPS)
+
+### Skills disponibles en este proyecto
+Invocar con `/nombre-del-skill`:
+
+| Skill | Descripción |
+|-------|-------------|
+| `/deploy` | Git push + deploy completo al VPS (git pull + ./deploy.sh) |
+| `/vps-status` | Ver estado PM2 y logs recientes del VPS |
+| `/sync-data` | Exportar datos locales y cargarlos al VPS |
+
+### Skills del sistema también disponibles:
+- `ui-ux-pro-max` — diseño de componentes/páginas con estilos avanzados
+- `frontend-design` — interfaces production-grade
+- `vercel-react-best-practices` — optimización Next.js/React
+
+### VPS de Producción
+- **URL**: http://212.85.12.168:3001
+- **Repo**: https://github.com/jfloresavalos/Nelaglow.git
+- **Guía completa**: `VPS-GUIDE.md`
+- **Scripts de datos**: `scripts/export-seed.js` → `scripts/seed.sql`
+
 ## Notas Tecnicas
 
 ### 1. Sistema Luminous
@@ -141,6 +173,31 @@ Para migrar productos ya creados (ej. "Termo Rojo", "Termo Azul" como productos 
 ### 7. Compilación Dev Rápida
 - **Turbopack** activo: `next dev --turbopack` en `package.json`. Reduce compilación de ~38s a ~3-6s.
 - **optimizePackageImports** en `next.config.ts`: `lucide-react`, `recharts`, `date-fns`. Reduce el número de módulos compilados.
+
+## Proyecto Relacionado: NelaGlowPage (Catálogo Público)
+
+Proyecto separado para clientes. **NO modificar desde este repo.**
+
+| Item | Valor |
+|------|-------|
+| **Repo** | https://github.com/jfloresavalos/NelaGlowPage.git |
+| **Local** | `C:\Devs\NelaGlowPage\` |
+| **VPS** | `212.85.12.168:3002` → `/var/www/nelaglow-page` |
+| **BD** | Misma `nelaglow_db` — solo lectura |
+| **Plan** | `PLAN-NelaGlowPage.md` (en este repo) |
+
+Características: catálogo público sin login, selector de color interactivo, stock en tiempo real, botón WhatsApp por producto (`WHATSAPP_NUMBER` en `.env`).
+Diseño: **"Dark Rose"** — fondo negro `#060606`, acentos rosa `#FF69B4`, tipografía ligera. Ver `nelaglow-style-guide.md`.
+Imágenes: servidas desde `https://admin.nelaglow.com/api/uploads/...` (proxy directo al admin).
+
+## Últimos Cambios (Sesión 2026-02-27 — Selector de Color + Plan Catálogo)
+1. **`product-card.tsx`**: imagen de la primera variante activa con imagen (no del padre). Fallback al padre si ninguna variante tiene imagen.
+2. **`products-table.tsx`**: misma corrección de imagen para consistencia en vista tabla desktop.
+3. **`product-color-selector.tsx`**: nuevo Client Component interactivo — selector de colores con imagen reactiva + stock por variante. Reutilizable.
+4. **`products/[id]/page.tsx`**: padres con variantes usan `ProductColorSelector`; standalone/variantes usan el render estático previo.
+5. **Skills creados**: `.claude/skills/deploy.md`, `.claude/skills/vps-status.md`, `.claude/skills/sync-data.md`.
+6. **Flujo Local→VPS**: todo cambio se prueba en local primero. Deploy solo con OK explícito del usuario via `/deploy`.
+7. **`PLAN-NelaGlowPage.md`**: plan completo para el proyecto de catálogo público separado.
 
 ## Últimos Cambios (Sesión 2026-02-25 — Deploy VPS)
 1. **Archivos de deploy creados**: `ecosystem.config.js` (PM2, puerto 3001), `deploy.sh` (script automatizado), `.env.production.example` (plantilla).

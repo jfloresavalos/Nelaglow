@@ -23,8 +23,23 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onDelete, priority = false }: ProductCardProps) {
   const { primaryImage, hasVariants, effectiveStock, isLowStock, isOutOfStock } = useMemo(() => {
-    const primaryImage = product.images.find((img) => img.isPrimary) || product.images[0]
     const hasVariants = !!(product.variants && product.variants.length > 0)
+
+    // Si tiene variantes, usar la imagen de la primera variante que tenga imagen
+    // Fallback a la imagen del padre si ninguna variante tiene imagen
+    let primaryImage: { imageUrl: string; thumbnailUrl?: string | null } | undefined
+    if (hasVariants) {
+      for (const variant of product.variants!) {
+        if (variant.images && variant.images.length > 0) {
+          primaryImage = variant.images[0]
+          break
+        }
+      }
+      if (!primaryImage) primaryImage = product.images.find((img) => img.isPrimary) || product.images[0]
+    } else {
+      primaryImage = product.images.find((img) => img.isPrimary) || product.images[0]
+    }
+
     const effectiveStock = hasVariants
       ? product.variants!.reduce((s, v) => s + v.stock, 0)
       : product.stock
